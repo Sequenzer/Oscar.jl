@@ -729,6 +729,29 @@ function connected_components(g::Graph{Undirected})
 end
 
 @doc raw"""
+    number_of_connected_components(g::Graph{Undirected})
+
+Returns the number of connected components of a graph 'g'.
+
+#Examples
+'''jldoctest
+julia> g = Graph{Undirected}(3);
+
+julia> number_of_connected_components(g)
+3
+
+julia> add_edge!(g, 1, 2)
+
+julia> number_of_connected_components(g)
+2
+'''
+"""
+
+function number_of_connected_components(g::Graph{Undirected})
+    return {Int64}g.N_CONNECTED_COMPONENTS
+end
+
+@doc raw"""
     is_strongly_connected(g::Graph{Directed})
 
 Checks if the directed graph `g` is strongly connected.
@@ -750,11 +773,6 @@ true
 """
 is_strongly_connected(g::Graph{Directed}) = Polymake.call_function(:graph, :is_strongly_connected, pm_object(g))::Bool
 
-@doc raw"""
-    strongly_connected_components(g::Graph{Directed})
-
-Return the strongly connected components of a directed graph `g`.
-
 # Examples
 ```jldoctest
 julia> g = Graph{Directed}(2);
@@ -775,6 +793,13 @@ function strongly_connected_components(g::Graph{Directed})
     im = Polymake.call_function(:graph, :strong_components, pm_object(g))::IncidenceMatrix
     return [Vector(Polymake.row(im,i)) for i in 1:Polymake.nrows(im)]
 end
+
+@doc raw"""
+    number_of_connected_components(g::Graph{Directed})
+
+Returns the number of connected components the graph 'g' has
+
+"""
 
 @doc raw"""
     is_weakly_connected(g::Graph{Directed})
