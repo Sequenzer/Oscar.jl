@@ -11,11 +11,11 @@ import Base: parent
 import Oscar: pretty, Lowercase, @show_name, @show_special
 
 function __init__()
-  Hecke.add_verbose_scope(:GroupCohomology)
-  Hecke.add_assert_scope(:GroupCohomology)
+  Hecke.add_verbosity_scope(:GroupCohomology)
+  Hecke.add_assertion_scope(:GroupCohomology)
 
-  Hecke.add_verbose_scope(:GaloisCohomology)
-  Hecke.add_assert_scope(:GaloisCohomology)
+  Hecke.add_verbosity_scope(:GaloisCohomology)
+  Hecke.add_assertion_scope(:GaloisCohomology)
 end
 
 ######################################################################
@@ -291,7 +291,7 @@ function induce(C::GModule{<:Oscar.GAPGroup, FinGenAbGroup}, h::Map, D = nothing
   #= C is Z[U] module, we needd
     C otimes Z[G]
 
-    any pure tensor c otimes g can be "normalised" g = u*g_i for one of the 
+    any pure tensor c otimes g can be "normalized" g = u*g_i for one of the
     reps fixed above, so c otimes g = c otimes u g_i == cu otimes g_i
 
     For the G-action we thus get
@@ -474,7 +474,10 @@ export action, cohomology_group, extension, pc_group_with_isomorphism
 export induce, is_consistent, istwo_cocycle, all_extensions
 export split_extension, extension_with_abelian_kernel
 
-Oscar.dim(C::GModule) = rank(C.M)
+_rank(M::FinGenAbGroup) = torsion_free_rank(M)
+_rank(M) = rank(M)
+
+Oscar.dim(C::GModule) = _rank(C.M)
 Oscar.base_ring(C::GModule) = base_ring(C.M)
 Oscar.group(C::GModule) = C.G
 
@@ -492,7 +495,7 @@ parent of the generators.
 function fp_group_with_isomorphism(g::Vector{<:Oscar.GAPGroupElem})
   G = parent(g[1])
   @assert all(x->parent(x) == G, g)
-  X = GAP.Globals.IsomorphismFpGroupByGenerators(G.X, GAPWrap.GeneratorsOfGroup(G.X))
+  X = GAPWrap.IsomorphismFpGroupByGenerators(G.X, GAPWrap.GeneratorsOfGroup(G.X))
   F = FPGroup(GAPWrap.Range(X))
   return F, GAPGroupHomomorphism(F, G, GAP.Globals.InverseGeneralMapping(X))
 end
@@ -853,7 +856,7 @@ end
 function confluent_fp_group_pc(G::Oscar.GAPGroup)
    g = isomorphism(PcGroup, G)
    P = codomain(g)
-   f = GAP.Globals.IsomorphismFpGroupByPcgs(GAP.Globals.FamilyPcgs(P.X), GAP.Obj("g"))
+   f = GAPWrap.IsomorphismFpGroupByPcgs(GAP.Globals.FamilyPcgs(P.X), GAP.Obj("g"))
    @req f != GAP.Globals.fail "Could not convert group into a group of type FPGroup"
    H = FPGroup(GAPWrap.Image(f))
    R = relations(H)
@@ -1713,7 +1716,16 @@ function Oscar.matrix(M::FreeModuleHom{FreeMod{QQAbElem}, FreeMod{QQAbElem}})
 end
 
 function ==(a::Union{Generic.ModuleHomomorphism, Generic.ModuleIsomorphism}, b::Union{Generic.ModuleHomomorphism, Generic.ModuleIsomorphism})
+  domain(a) === domain(b) || return false
+  codomain(a) === codomain(b) || return false
   return matrix(a) == matrix(b)
+end
+
+function Base.hash(a::Union{Generic.ModuleHomomorphism, Generic.ModuleIsomorphism}, h::UInt)
+  h = hash(domain(a), h)
+  h = hash(codomain(a), h)
+  h = hash(matrix(a), h)
+  return h
 end
 
 function Oscar.id_hom(A::AbstractAlgebra.FPModule)
@@ -2071,7 +2083,7 @@ function extension(::Type{PcGroup}, c::CoChain{2,<:Oscar.PcGroupElem})
   # F^p = w (order relation)
   #  compute (F, 0)^p = (?, t) = (?, 0)(1, t)
   #  compute (w, 0)   = (?, s) = (?, 0)(1, s)
-  #  so (?, 0) = (w, 0)(1,s)^-1= (w, 0)(1,-s) if chain is normalised
+  #  so (?, 0) = (w, 0)(1,s)^-1= (w, 0)(1,-s) if chain is normalized
   #  thus (F, 0)^p = (?, 0)(1, t) = (w, 0)(1,-s)(1, t)
   #  the ? should be identical, namely the collected version of w
   #  then (F, 0)^p = (w, t-s) might be the answer
