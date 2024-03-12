@@ -17,6 +17,7 @@ Two-sided ideal of a free associative algebra with elements of type `T`.
 mutable struct FreeAssAlgIdeal{T} <: Ideal{T}
   gens::IdealGens{T}
   gb::IdealGens{T}
+  deg_bound::Int
 
   function FreeAssAlgIdeal(R::FreeAssAlgebra, g::Vector{T}) where T <: FreeAssAlgElem
     r = new{T}()
@@ -94,7 +95,18 @@ true
 ```
 """
 function ideal_membership(a::FreeAssAlgElem, I::FreeAssAlgIdeal, deg_bound::Int=-1)
-  return ideal_membership(a, IdealGens(gens(I)), deg_bound)
+  R = base_ring(I)
+  if isdefined(I, :gb) && isdefined(I, :deg_bound) && ( I.deg_bound >= deg_bound || I.deg_bound == -1 )
+    gb = I.gb 
+    deg_bound_ = max(maximum(total_degree.(gb)),total_degree(a))
+  else
+    gb = groebner_basis(I, deg_bound; protocol=false)
+    deg_bound_ = deg_bound
+  end
+  lpring, _ = _to_lpring(R, deg_bound_)
+
+  lp_I = Singular.Ideal(lpring, lpring.(gb))
+  return iszero(reduce(lpring(a), lp_I))
 end
 function ideal_membership(a::FreeAssAlgElem, I::IdealGens{<:FreeAssAlgElem}, deg_bound::Int=-1)
   return ideal_membership(a, collect(I), deg_bound)
@@ -154,8 +166,11 @@ Ideal generating system with elements
 ```
 """
 function groebner_basis(I::FreeAssAlgIdeal, deg_bound::Int=-1; protocol::Bool=false)
-  isdefined(I, :gb) && return I.gb
+  if isdefined(I, :gb) && isdefined(I, :gb) && ( I.deg_bound >= deg_bound || I.deg_bound == -1 )
+    return I.gb
+  end
   I.gb = groebner_basis(IdealGens(gens(I)), deg_bound, protocol=protocol)
+  I.deg_bound = deg_bound
   return I.gb
 end
 function groebner_basis(g::IdealGens{<:FreeAssAlgElem}, deg_bound::Int=-1; protocol::Bool=false)
