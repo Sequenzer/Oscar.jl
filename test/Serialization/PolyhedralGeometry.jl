@@ -11,6 +11,24 @@ using Oscar: _integer_variables
               @test n_edges(G) == n_edges(loaded)
             end
         end
+        @testset "Matroid" begin
+          @testset "Fano" begin
+            M = fano_matroid()
+            test_save_load_roundtrip(path, M) do loaded
+              @test sort(bases(M)) == sort(bases(loaded))
+              @test length(M) == length(loaded)
+              @test rank(M) == rank(loaded)
+            end
+          end
+          @testset "uniform" begin
+            M = uniform_matroid(2, 4)
+            test_save_load_roundtrip(path, M) do loaded
+              @test sort(bases(M)) == sort(bases(loaded))
+              @test length(M) == length(loaded)
+              @test rank(M) == rank(loaded)
+            end
+          end
+        end
 
         @testset "Cone" begin
           C = positive_hull([1 0; 0 1])
