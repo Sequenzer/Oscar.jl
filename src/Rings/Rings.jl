@@ -36,5 +36,3 @@ include("PBWAlgebraQuo.jl")
 include("FreeAssAlgIdeal.jl")
 include("hilbert.jl")
 include("primary_decomposition_helpers.jl")
-
-include("QuantumGroups.jl")

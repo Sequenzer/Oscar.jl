@@ -349,4 +349,13 @@
         U = matroid_from_bases([[1,2],[2,3],[1,3]],5)
         @test automorphism_group(U) == automorphism_group(dual_matroid(U)) 
     end
+    
+    @testset "matroid6 and matroid_hex" begin
+        M = fano_matroid() 
+        N = uniform_matroid(2, 4)
+        M1 = matroid_from_matroid6(matroid6(M))
+        N1 = matroid_from_matroid6(matroid6(N))
+        @test is_isomorphic(M, M1)
+        @test is_isomorphic(N, N1)
+    end
 end
