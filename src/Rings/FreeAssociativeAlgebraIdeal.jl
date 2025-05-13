@@ -192,27 +192,32 @@ function groebner_basis(g::IdealGens{<:FreeAssociativeAlgebraElem},
   deg_bound::Int=-1;
   ordering::Symbol=:deglex,
   protocol::Bool=false,
-  interreduce::Bool=false)
-  gb = groebner_basis(collect(g), deg_bound; ordering=ordering, protocol=protocol, interreduce=interreduce)
+  interreduce::Bool=false,
+  partial_gb::Vector{<:FreeAssociativeAlgebraElem} = FreeAssociativeAlgebraElem[]
+  )
+  gb = groebner_basis(collect(g), deg_bound; ordering=ordering, protocol=protocol, interreduce=interreduce, partial_gb=partial_gb)
   return IdealGens(gb)
 end
 function groebner_basis(g::Vector{<:FreeAssociativeAlgebraElem},
   deg_bound::Int=-1;
   ordering::Symbol=:deglex,
   protocol::Bool=false,
-  interreduce::Bool=false)
-
+  interreduce::Bool=false,
+  partial_gb::Vector{<:FreeAssociativeAlgebraElem} = FreeAssociativeAlgebraElem[]
+  )
   R = parent(g[1])
   @req all(x -> parent(x) == R, g) "parent mismatch"
   @req deg_bound >= 0 || !protocol "computing with a protocol requires a degree bound"
   @req ordering == :deglex || deg_bound > 0 "only :deglex ordering is supported for no degree bound"
 
   if deg_bound == -1
-      gb = AbstractAlgebra.groebner_basis(g)
+      gb = AbstractAlgebra.groebner_basis(g;gb=partial_gb)
       interreduce && return interreduce!(gb)
       return gb
   end
-    
+
+  @req isempty(partial_gb)  "Computing with a partial groebner basis only works without a degree bound"
+
   lpring, _ = _to_lpring(R, deg_bound; ordering=ordering)
   lp_I_gens = lpring.(g)
 

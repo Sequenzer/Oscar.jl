@@ -1,3 +1,72 @@
+
+
+#=
+n = 5
+A, u = free_associative_algebra(QQ, :u => (1:n, 1:n))
+
+_quantum_symm_gb(A,u,n)
+=#
+function _quantum_symm_gb(A::FreeAssociativeAlgebra, u::Matrix{<:FreeAssociativeAlgebraElem},n::Int)
+
+  row_sum(i::Int) = sum([u[i, x] for x in 1:n]) - one(parent(u[1, 1]))
+  col_sum(i::Int) = sum([u[x, i] for x in 1:n]) - one(parent(u[1, 1]))
+
+  rwel(k::Int, j::Int) = sum([u[2, k] * u[s, j] for s in 3:n]) - sum([u[s, k] * u[1, j] for s in 3:n]) + u[1, j] - u[2, k]
+
+  rinj(k::Int, j::Int) = sum([u[k, 2] * u[j, s] for s in 3:n]) - sum([u[k, s] * u[j, 1] for s in 3:n]) + u[j, 1] - u[k, 2]
+
+  wel(i::Int, j::Int, k::Int) = u[i, j] * u[i, k]
+
+  inj(i::Int, j::Int, k::Int) = u[i, j] * u[k, j]
+
+  ip(i::Int, j::Int) = u[i, j] * u[i, j] - u[i, j]
+
+  bg2(k::Int, j::Int, i::Int) = u[k, 2] * inj(j, 3, i) - rinj(k, j) * u[i, 3]
+  bg8(k::Int, j::Int, i::Int) = u[2, k] * wel(3, j, i) - rwel(k, j) * u[3, i]
+
+
+  gb = [col_sum(i) for i in 1:n]
+
+  for i in 2:n; push!(gb,row_sum(i)); end
+  for i in 2:n for j in 2:n; push!(gb, ip(i,j)); end; end
+  for i in 2:n for j in 2:n; 
+    for k in 2:n
+      j == k && continue
+      push!(gb,wel(i, j, k)); 
+    end;
+  end; end
+
+  for i in 2:n for j in 2:n; 
+    for k in 2:n
+      i == k && continue
+      push!(gb,inj(i, j, k)); 
+    end;
+  end; end
+
+  for j in 2:n for k in 2:n
+    if  k != j && !(j == 3 && k == 2)
+      push!(gb, rwel(k, j)) 
+    end
+  end end
+
+  for j in 2:n for k in 2:n
+    if  k != j 
+      push!(gb, rinj(k, j)) 
+    end
+  end end
+
+  for k in 3:n for j in 3:n for i in 2:n
+    if i != j && j!=k 
+      push!(gb, bg2(k,j,i))
+    end
+  end end end
+
+end
+
+
+
+
+
 @doc raw"""
     quantum_symmetric_group(n::Int)
 
