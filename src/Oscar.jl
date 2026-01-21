@@ -85,7 +85,7 @@ function __init__()
     [
         (GAP.Globals.IsPermGroup, PermGroup),
         (GAP.Globals.IsPcGroup, PcGroup),
-        (GAP.Globals.IsMatrixGroup, MatrixGroup),
+        (GAP.Globals.IsMatrixGroup, MatGroup),
         (GAP.Globals.IsSubgroupFpGroup, FPGroup),
         (GAP.Globals.IsGroupOfAutomorphisms, AutomorphismGroup),
     ])
@@ -126,7 +126,13 @@ function __init__()
 
   add_verbosity_scope(:K3Auto)
   add_assertion_scope(:K3Auto)
+
+  add_verbosity_scope(:Isometry)
+  add_assertion_scope(:Isometry)
   
+  add_verbosity_scope(:OrthogonalStablizer)
+  add_assertion_scope(:OrthogonalStablizer)
+
   add_verbosity_scope(:EnriquesAuto)
   add_assertion_scope(:EnriquesAuto)
 
@@ -179,6 +185,12 @@ function __init__()
       Pkg.is_manifest_current() :
       Pkg.is_manifest_current(dirname(Base.active_project())))
     @warn "Project dependencies might have changed, please run `]up` or `]resolve`."
+  end
+
+  # call git subprocess here to avoid conflicts with
+  # IPC communication serialization
+  if Oscar.is_dev
+    Serialization.get_oscar_serialization_version()
   end
 end
 
@@ -247,7 +259,8 @@ include("fallbacks.jl")
 
 include("Rings/Rings.jl")
 include("forward_declarations.jl")
-include("Groups/Groups.jl")
+include("Misc/Misc.jl")
+include("Groups/Groups.jl")  # Needs IndexedSet
 
 include("GAP/GAP.jl")
 
@@ -260,6 +273,7 @@ include("Rings/ReesAlgebra.jl") # Needs ModuleFP
 include("NumberTheory/NmbThy.jl")
 include("NumberTheory/QuadFormAndIsom.jl")
 include("NumberTheory/vinberg.jl")
+include("NumberTheory/ZLattices.jl")
 
 include("Combinatorics/Graphs/structs.jl")
 include("PolyhedralGeometry/PolyhedralGeometry.jl")
@@ -291,7 +305,6 @@ include("InvariantTheory/InvariantTheory.jl")
 
 include("LieTheory/LieTheory.jl")
 
-include("Misc/Misc.jl")
 
 # Serialization should always come at the end of Oscar source code
 # but before experimental, any experimental serialization should
